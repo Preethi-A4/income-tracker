@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Budget Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f7f7f7; }
+    h1 { text-align: center; }
+    .container { max-width: 600px; margin: auto; background: #fff; padding: 20px; border-radius: 10px; }
+    form { display: flex; flex-direction: column; gap: 10px; }
+    input, select, button { padding: 10px; font-size: 16px; }
+    .summary { margin-top: 20px; font-weight: bold; }
+    .transactions { margin-top: 20px; }
+    .transactions li { list-style: none; padding: 10px; margin: 5px 0; border-radius: 5px; }
+    .income { background-color: #d4edda; }
+    .expense { background-color: #f8d7da; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Budget Tracker</h1>
+    <form id="budget-form">
+      <input type="number" id="amount" placeholder="Amount" required />
+      <select id="type">
+        <option value="income">Income</option>
+        <option value="expense">Expense</option>
+      </select>
+      <input type="text" id="category" placeholder="Category" required />
+      <input type="text" id="description" placeholder="Description" required />
+      <button type="submit">Add Transaction</button>
+    </form>
+
+    <div class="summary">
+      <p>Total Income: $<span id="total-income">0</span></p>
+      <p>Total Expenses: $<span id="total-expenses">0</span></p>
+      <p>Balance: $<span id="balance">0</span></p>
+    </div>
+
+    <ul id="transactions" class="transactions"></ul>
+  </div>
+
+  <script>
+    const form = document.getElementById('budget-form');
+    const amount = document.getElementById('amount');
+    const type = document.getElementById('type');
+    const category = document.getElementById('category');
+    const description = document.getElementById('description');
+    const transactionsList = document.getElementById('transactions');
+    const totalIncomeEl = document.getElementById('total-income');
+    const totalExpensesEl = document.getElementById('total-expenses');
+    const balanceEl = document.getElementById('balance');
+
+    let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+
+    function saveTransactions() {
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+
+    function updateSummary() {
+      const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+      const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      totalIncomeEl.textContent = income.toFixed(2);
+      totalExpensesEl.textContent = expenses.toFixed(2);
+      balanceEl.textContent = (income - expenses).toFixed(2);
+    }
+
+    function renderTransactions() {
+      transactionsList.innerHTML = '';
+      transactions.forEach((t, index) => {
+        const li = document.createElement('li');
+        li.classList.add(t.type);
+        li.textContent = `${t.type.toUpperCase()}: $${t.amount} - ${t.category} (${t.description})`;
+        transactionsList.appendChild(li);
+      });
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const newTransaction = {
+        amount: parseFloat(amount.value),
+        type: type.value,
+        category: category.value,
+        description: description.value
+      };
+      transactions.push(newTransaction);
+      saveTransactions();
+      renderTransactions();
+      updateSummary();
+      form.reset();
+    });
+
+    renderTransactions();
+    updateSummary();
+  </script>
+</body>
+</html>
